@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation, Routes } from "react-router-dom";
+import { useLocation, Routes, Route } from "react-router-dom";
 import { type ReactNode, useEffect } from "react";
 
 interface AnimatedRoutesProps {
@@ -25,7 +25,7 @@ export default function AnimatedRoutes({ children }: AnimatedRoutesProps) {
           ease: [0.2, 0, 0, 1],
         }}
       >
-        <Routes location={location}>
+        <Routes location={location} key={location.pathname}>
           {children}
         </Routes>
       </motion.div>
