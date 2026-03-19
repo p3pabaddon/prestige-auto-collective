@@ -1,14 +1,59 @@
 import { useSearchParams, Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Shield, FileCheck, Eye } from "lucide-react";
+import { ArrowLeft, ArrowRight, Shield } from "lucide-react";
 import ScrollReveal from "@/components/ScrollReveal";
 import VehicleCard, { getVehicleImage } from "@/components/VehicleCard";
+import LightboxGallery from "@/components/LightboxGallery";
 import { vehicles } from "@/data/vehicles";
+import { useMemo } from "react";
+
+// Map each vehicle to a set of gallery images using all available photos
+import heroCarImg from "@/assets/hero-car.jpg";
+import suvImg from "@/assets/vehicle-suv.jpg";
+import coupeImg from "@/assets/vehicle-coupe.jpg";
+import sedanImg from "@/assets/vehicle-sedan.jpg";
+import sportRedImg from "@/assets/vehicle-sport-red.jpg";
+import estateImg from "@/assets/vehicle-estate.jpg";
+import qualityDetailImg from "@/assets/quality-detail.jpg";
+import showroomImg from "@/assets/showroom.jpg";
+import blogHeaderImg from "@/assets/blog-header.jpg";
+
+const allImages = [heroCarImg, suvImg, coupeImg, sedanImg, sportRedImg, estateImg, qualityDetailImg, showroomImg, blogHeaderImg];
+
+const galleryLabels = [
+  "Front Three-Quarter",
+  "Rear Three-Quarter",
+  "Side Profile",
+  "Interior Overview",
+  "Dashboard Detail",
+  "Engine Bay",
+  "Wheel Detail",
+  "Rear View",
+  "Interior Stitching",
+];
+
+function buildGalleryImages(vehicleImage: string, vehicleName: string) {
+  const primary = getVehicleImage(vehicleImage);
+  // Build a gallery: primary image first, then other images as "angles"
+  const others = allImages.filter((img) => img !== primary);
+  const gallery = [primary, ...others.slice(0, 5)];
+  return gallery.map((src, i) => ({
+    src,
+    alt: `${vehicleName} — ${galleryLabels[i] || `View ${i + 1}`}`,
+    label: galleryLabels[i] || `View ${i + 1}`,
+  }));
+}
 
 export default function VehicleDetails() {
   const [searchParams] = useSearchParams();
   const vehicleId = searchParams.get("id") || "1";
   const vehicle = vehicles.find((v) => v.id === vehicleId) || vehicles[0];
   const related = vehicles.filter((v) => v.id !== vehicle.id).slice(0, 2);
+  const vehicleName = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+
+  const galleryImages = useMemo(
+    () => buildGalleryImages(vehicle.image, vehicleName),
+    [vehicle.image, vehicleName]
+  );
 
   return (
     <main>
@@ -20,17 +65,11 @@ export default function VehicleDetails() {
         </div>
       </section>
 
-      {/* Hero Gallery */}
+      {/* Gallery */}
       <section className="px-6 md:px-12 lg:px-20 pb-8">
         <div className="max-w-[1400px] mx-auto">
           <ScrollReveal>
-            <div className="premium-card overflow-hidden rounded-3xl">
-              <img
-                src={getVehicleImage(vehicle.image)}
-                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                className="w-full aspect-[21/9] object-cover"
-              />
-            </div>
+            <LightboxGallery images={galleryImages} />
           </ScrollReveal>
         </div>
       </section>
