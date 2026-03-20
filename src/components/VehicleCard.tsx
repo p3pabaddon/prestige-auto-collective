@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Plus, Check } from "lucide-react";
 import type { Vehicle } from "@/data/vehicles";
 import heroCarImg from "@/assets/hero-car.jpg";
 import suvImg from "@/assets/vehicle-suv.jpg";
@@ -25,15 +26,19 @@ interface VehicleCardProps {
   vehicle: Vehicle;
   index?: number;
   sold?: boolean;
+  compareMode?: boolean;
+  isSelected?: boolean;
+  onToggleCompare?: (vehicle: Vehicle) => void;
 }
 
-export default function VehicleCard({ vehicle, index = 0, sold = false }: VehicleCardProps) {
+export default function VehicleCard({ vehicle, index = 0, sold = false, compareMode = false, isSelected = false, onToggleCompare }: VehicleCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.2, 0, 0, 1] }}
+      className="relative"
     >
       <Link
         to={`/vehicle-details?id=${vehicle.id}`}
@@ -86,6 +91,19 @@ export default function VehicleCard({ vehicle, index = 0, sold = false }: Vehicl
           </div>
         </div>
       </Link>
+      {compareMode && onToggleCompare && (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleCompare(vehicle); }}
+          className={`absolute top-4 right-4 z-10 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+            isSelected
+              ? "bg-foreground text-background"
+              : "bg-background/80 backdrop-blur-sm text-foreground border border-subtle hover:bg-foreground hover:text-background"
+          }`}
+          title={isSelected ? "Remove from comparison" : "Add to comparison"}
+        >
+          {isSelected ? <Check size={14} /> : <Plus size={14} />}
+        </button>
+      )}
     </motion.div>
   );
 }
