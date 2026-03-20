@@ -16,6 +16,7 @@ import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
 import Quality from "./pages/Quality";
 import Sold from "./pages/Sold";
+import Compare from "./pages/Compare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
