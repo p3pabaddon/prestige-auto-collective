@@ -1,10 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, GitCompareArrows } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import VehicleCard from "@/components/VehicleCard";
+import CompareBar from "@/components/CompareBar";
 import ScrollReveal from "@/components/ScrollReveal";
-import { vehicles } from "@/data/vehicles";
+import { vehicles, type Vehicle } from "@/data/vehicles";
 
 const bodyTypes = ["All", "Sedan", "SUV", "Coupé", "Sportback", "Estate"];
 const fuelTypes = ["All", "Petrol", "Diesel", "Hybrid"];
@@ -16,6 +18,8 @@ export default function Inventory() {
   const [fuelType, setFuelType] = useState("All");
   const [transmission, setTransmission] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareList, setCompareList] = useState<Vehicle[]>([]);
 
   const filtered = useMemo(() => {
     return vehicles.filter((v) => {
@@ -28,6 +32,23 @@ export default function Inventory() {
   }, [search, bodyType, fuelType, transmission]);
 
   const activeFilters = [bodyType, fuelType, transmission].filter((f) => f !== "All").length;
+
+  const toggleCompare = useCallback((vehicle: Vehicle) => {
+    setCompareList((prev) => {
+      if (prev.find((v) => v.id === vehicle.id)) {
+        return prev.filter((v) => v.id !== vehicle.id);
+      }
+      if (prev.length >= 3) return prev;
+      return [...prev, vehicle];
+    });
+  }, []);
+
+  const handleToggleCompareMode = () => {
+    setCompareMode((prev) => {
+      if (prev) setCompareList([]);
+      return !prev;
+    });
+  };
 
   return (
     <main>
@@ -52,6 +73,17 @@ export default function Inventory() {
                   className="w-full pl-11 pr-4 py-3 rounded-lg bg-card border border-subtle text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
                 />
               </div>
+              <button
+                onClick={handleToggleCompareMode}
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg border text-sm font-medium transition-colors ${
+                  compareMode
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-subtle text-foreground hover:bg-secondary"
+                }`}
+              >
+                <GitCompareArrows size={16} />
+                {compareMode ? "Exit Compare" : "Compare"}
+              </button>
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-subtle text-sm text-foreground hover:bg-secondary transition-colors"
@@ -139,6 +171,14 @@ export default function Inventory() {
             </ScrollReveal>
           )}
 
+          {compareMode && (
+            <div className="mb-6 px-3 py-2 rounded-lg bg-secondary/50 border border-subtle">
+              <p className="text-xs text-muted-foreground">
+                Select 2–3 vehicles to compare side by side. Click the <strong>+</strong> icon on each card.
+              </p>
+            </div>
+          )}
+
           {/* Results */}
           <div className="mb-6">
             <p className="text-sm text-muted-foreground">
@@ -148,7 +188,14 @@ export default function Inventory() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filtered.map((v, i) => (
-              <VehicleCard key={v.id} vehicle={v} index={i} />
+              <VehicleCard
+                key={v.id}
+                vehicle={v}
+                index={i}
+                compareMode={compareMode}
+                isSelected={compareList.some((c) => c.id === v.id)}
+                onToggleCompare={toggleCompare}
+              />
             ))}
           </div>
 
@@ -165,6 +212,16 @@ export default function Inventory() {
           )}
         </div>
       </section>
+
+      <AnimatePresence>
+        {compareMode && compareList.length > 0 && (
+          <CompareBar
+            vehicles={compareList}
+            onRemove={(id) => setCompareList((prev) => prev.filter((v) => v.id !== id))}
+            onClear={() => setCompareList([])}
+          />
+        )}
+      </AnimatePresence>
     </main>
   );
 }
